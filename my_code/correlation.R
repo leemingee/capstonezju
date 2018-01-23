@@ -1,0 +1,51 @@
+correlation<-function(y,x,n,dx,tau,d,Mstar,alpha,cc)
+{  
+   bd=floor(cc*(n/log(n))^(1/2))
+  CORM=matrix(NA,nrow=dx,ncol=bd)
+  ix=seq(1:dx)
+ for(j in 1:dx){
+   xj=x[,j]
+   ixj=ix[-j]
+   rhoj=abs(cor(xj,x[,-j]))
+   rhoj=as.vector(rhoj)  
+   rhoind=cbind(rhoj,ixj)
+   rhoind=rhoind[sort.list(rhoind[,1],decreasing = TRUE), ]  
+   Fish=1
+   crit=0
+   k=-1 
+   mn=min(nrow(rhoind),bd)
+    while((Fish>=crit)&(k<mn))
+    { 
+    k=k+1
+   if(k==0){
+   xk=x[,-j]
+   rjk=t(xj)%*%xk/n
+   rjk=as.vector(rjk)
+   xjnorm=sqrt(t(xj)%*%xj/n)
+   xknorm=sqrt(diag(t(xk)%*%xk/n))
+   rjk=rjk/(xjnorm*xknorm)
+   rjk=rjk*(rjk<1)+0.99*(rjk>=1)
+   Fjk=0.5*log((1+rjk)/(1-rjk))
+   }else{
+   idxz=rhoind[1:k,2]
+   xs=x[,idxz]
+   xs=as.matrix(xs)
+   Qs=diag(n)-xs%*%solve(t(xs)%*%xs)%*%t(xs)
+   xk=x[,-c(idxz,j)]
+   rjk=t(xj)%*%Qs%*%xk/n
+   rjk=as.vector(rjk)
+   xjnorm=sqrt(t(xj)%*%Qs%*%xj/n)
+   xknorm=sqrt(diag(t(xk)%*%Qs%*%xk/n))
+   rjk=rjk/(xjnorm*xknorm)
+   Fjk=0.5*log((1+rjk)/(1-rjk))
+   }
+   Fish=(sqrt(n-k-3))*max(Fjk)
+   crit=qnorm(1-alpha/2)
+   }
+   if(k>0){
+   CORM[j,1:k]=rhoind[1:k,2]
+   }
+}
+   return(list(CORM))
+
+}
